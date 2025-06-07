@@ -10,22 +10,22 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
+client = openai.AsyncOpenAI(api_key=api_key)
 
 class ChatRequest(BaseModel):
     prompt: str
 
 
 def sanitize(message: str) -> str:
-    key = openai.api_key
-    if key:
-        message = message.replace(key, "[REDACTED]")
+    if api_key:
+        message = message.replace(api_key, "[REDACTED]")
     return message
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
     try:
-        resp = await openai.ChatCompletion.acreate(
+        resp = await client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": req.prompt}],
         )
